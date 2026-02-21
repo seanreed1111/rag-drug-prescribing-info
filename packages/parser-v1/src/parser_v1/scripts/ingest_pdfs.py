@@ -5,6 +5,15 @@ import sys
 import time
 from pathlib import Path
 
+from loguru import logger
+from tenacity import (
+    RetryCallState,
+    retry,
+    retry_if_exception,
+    stop_after_attempt,
+    wait_exponential,
+)
+
 import chromadb
 from dotenv import load_dotenv
 from llama_index.core.ingestion import IngestionPipeline
@@ -19,6 +28,35 @@ from parser_v1.scripts.pdf_section_parser import parse_pdf_into_sections
 # Paths
 PRESCRIBING_INFO_DIR = Path.cwd() / "prescribing_info"
 CHROMA_DB_DIR = Path.cwd() / "chroma_db"
+
+
+_MAX_RETRY_ATTEMPTS = 6
+
+
+def _is_rate_limit_error(exc: BaseException) -> bool:
+    """Return True if the exception looks like an API rate-limit error."""
+    msg = str(exc).lower()
+    if (
+        "429" in msg
+        or "rate limit" in msg
+        or "rate_limit" in msg
+        or "too many requests" in msg
+    ):
+        return True
+    if exc.__cause__:
+        return _is_rate_limit_error(exc.__cause__)
+    return False
+
+
+def _log_retry(rs: RetryCallState) -> None:
+    """Log retry attempts via loguru before sleeping."""
+    wait = rs.next_action.sleep if rs.next_action else 0
+    logger.warning(
+        "Rate limit hit — retrying in {wait:.1f}s (attempt {attempt}/{max_attempts})",
+        wait=wait,
+        attempt=rs.attempt_number,
+        max_attempts=_MAX_RETRY_ATTEMPTS,
+    )
 
 
 def build_pipeline(vector_store: ChromaVectorStore, api_key: str) -> IngestionPipeline:
@@ -36,6 +74,18 @@ def build_pipeline(vector_store: ChromaVectorStore, api_key: str) -> IngestionPi
         ],
         vector_store=vector_store,
     )
+
+
+@retry(
+    retry=retry_if_exception(_is_rate_limit_error),
+    wait=wait_exponential(multiplier=1, min=10, max=120),
+    stop=stop_after_attempt(_MAX_RETRY_ATTEMPTS),
+    before_sleep=_log_retry,
+    reraise=True,
+)
+def _run_pipeline_with_retry(pipeline: IngestionPipeline, documents: list) -> list:
+    """Run the ingestion pipeline with retry on rate-limit errors."""
+    return pipeline.run(documents=documents)
 
 
 def main():
@@ -88,7 +138,7 @@ def main():
             documents = parse_pdf_into_sections(pdf_path, base_metadata=drug_meta)
 
             # Run ingestion pipeline (chunk + embed + store)
-            nodes = pipeline.run(documents=documents)
+            nodes = _run_pipeline_with_retry(pipeline, documents)
             elapsed = time.time() - start
 
             print(

@@ -1,6 +1,6 @@
 # Cohere Rate-Limit Retry with Tenacity Implementation Plan
 
-> **Status:** DRAFT
+> **Status:** REVISED — Ready for execution
 
 ## Table of Contents
 
@@ -32,6 +32,7 @@ This plan adds exponential backoff retry using the `tenacity` library (already a
 - The ingestion loop (`ingest_pdfs.py:79-102`) processes PDFs sequentially with no delay between them
 - Rate-limit errors from Cohere surface as exceptions from the LlamaIndex `IngestionPipeline.run()` method
 - The `pipeline` object is reusable across calls — wrapping individual `pipeline.run()` calls in retry is safe
+- Rate-limit errors from Cohere are propagated as exceptions by the `llama_index.embeddings.cohere` adapter. The exact exception class varies across SDK versions (e.g., `httpx.HTTPStatusError`, `cohere.errors.TooManyRequestsError`, or a generic `Exception`). The `_is_rate_limit_error` predicate uses intentionally broad string matching (`"429"`, `"rate limit"`, `"rate_limit"`, `"too many requests"`) and recursively inspects `__cause__` to handle wrapping at any layer of the call stack.
 
 ## Desired End State
 
@@ -46,7 +47,7 @@ When `ingest_pdfs.py` hits a Cohere rate limit, it automatically waits with expo
 
 **How to Verify:**
 - Run `uv run pytest` from `packages/parser-v1/` — all existing tests pass
-- Run `uv run ruff check packages/parser-v1/` — no lint errors
+- Run `uv run ruff check packages/parser-v1/src/` — no lint errors
 - Run the full ingestion: `uv run python -m parser_v1.scripts.ingest_pdfs` and observe retry logs when rate-limited
 
 ## What We're NOT Doing
@@ -62,6 +63,7 @@ When `ingest_pdfs.py` hits a Cohere rate limit, it automatically waits with expo
 | File | Action | Phase | Purpose |
 |------|--------|-------|---------|
 | `packages/parser-v1/src/parser_v1/scripts/ingest_pdfs.py` | MODIFY | 1 | Add tenacity retry wrapper around `pipeline.run()` |
+| `packages/parser-v1/src/parser_v1/tests/test_ingest_pdfs.py` | CREATE | 1 | Unit tests for `_is_rate_limit_error` predicate |
 
 ## Implementation Approach
 
@@ -90,6 +92,7 @@ graph TD
 | Max wait | 60s, 120s, 300s | 120s | 2 min max is long enough for per-minute limits to reset |
 | Max attempts | 3, 5, 6 | 6 | With 10s base and multiplier=2, 6 attempts covers up to ~5 min total wait which should handle bursty rate limits |
 | Logging | stdlib logging vs loguru | loguru | loguru is already a dependency; tenacity's `before_sleep_log` only works with stdlib logging, so a custom `before_sleep` callback is used instead |
+| Deduplication on retry | Prevent partial-write duplicates vs accept and rebuild | Accept; re-run starts clean | `main()` deletes the entire collection at startup (lines 53–57), so any cross-run duplicates are impossible. Within a single run, if `pipeline.run()` partially writes nodes before raising, retrying could write those nodes a second time for that PDF. This is acceptable: (a) the collection is trivially rebuilt by re-running the script, and (b) in practice, `IngestionPipeline` propagates rate-limit errors before the store step completes for the affected batch. |
 
 ## Dependencies
 
@@ -140,7 +143,7 @@ from loguru import logger
 from tenacity import (
     retry,
     retry_if_exception,
-    retry_state,
+    RetryCallState,
     stop_after_attempt,
     wait_exponential,
 )
@@ -153,6 +156,8 @@ from tenacity import (
 **What this does:** Adds a predicate function that identifies rate-limit errors by checking for HTTP 429 status codes or "rate limit" in the error message, a loguru-based `before_sleep` callback, and a retry-decorated wrapper around `pipeline.run()`.
 
 Note: tenacity's built-in `before_sleep_log` only works with stdlib `logging`. Since we use loguru, we define a custom `_log_retry` callback instead that calls `logger.warning()` directly with the retry state details.
+
+> **Note:** Line numbers below refer to the **original, unmodified file**. After step 1.1 inserts new import lines, `build_pipeline` will appear at higher line numbers. Use content-based matching (the exact string of the function definition) rather than relying on line numbers.
 
 **Before** (lines 24-38, the `build_pipeline` function and its surrounding whitespace):
 ```python
@@ -175,6 +180,9 @@ def build_pipeline(vector_store: ChromaVectorStore, api_key: str) -> IngestionPi
 
 **After:**
 ```python
+_MAX_RETRY_ATTEMPTS = 6
+
+
 def _is_rate_limit_error(exc: BaseException) -> bool:
     """Return True if the exception looks like an API rate-limit error."""
     msg = str(exc).lower()
@@ -186,13 +194,14 @@ def _is_rate_limit_error(exc: BaseException) -> bool:
     return False
 
 
-def _log_retry(rs: retry_state) -> None:
+def _log_retry(rs: RetryCallState) -> None:
     """Log retry attempts via loguru before sleeping."""
     wait = rs.next_action.sleep if rs.next_action else 0
     logger.warning(
-        "Rate limit hit — retrying in {wait:.1f}s (attempt {attempt}/6)",
+        "Rate limit hit — retrying in {wait:.1f}s (attempt {attempt}/{max_attempts})",
         wait=wait,
         attempt=rs.attempt_number,
+        max_attempts=_MAX_RETRY_ATTEMPTS,
     )
 
 
@@ -216,7 +225,7 @@ def build_pipeline(vector_store: ChromaVectorStore, api_key: str) -> IngestionPi
 @retry(
     retry=retry_if_exception(_is_rate_limit_error),
     wait=wait_exponential(multiplier=1, min=10, max=120),
-    stop=stop_after_attempt(6),
+    stop=stop_after_attempt(_MAX_RETRY_ATTEMPTS),
     before_sleep=_log_retry,
     reraise=True,
 )
@@ -241,12 +250,60 @@ def _run_pipeline_with_retry(pipeline: IngestionPipeline, documents: list) -> li
             nodes = _run_pipeline_with_retry(pipeline, documents)
 ```
 
+#### 1.4: Add unit tests for `_is_rate_limit_error`
+**File:** `packages/parser-v1/src/parser_v1/tests/test_ingest_pdfs.py`
+**Action:** CREATE
+
+**What this does:** Adds unit tests for the `_is_rate_limit_error` predicate covering: rate-limit string patterns, HTTP 429 code, chained/nested exceptions, and non-rate-limit errors that must NOT be retried.
+
+```python
+"""Unit tests for ingest_pdfs retry helpers."""
+
+from parser_v1.scripts.ingest_pdfs import _is_rate_limit_error
+
+
+def test_rate_limit_in_message():
+    assert _is_rate_limit_error(Exception("rate limit exceeded")) is True
+
+
+def test_429_in_message():
+    assert _is_rate_limit_error(Exception("HTTP 429 Too Many Requests")) is True
+
+
+def test_too_many_requests_in_message():
+    assert _is_rate_limit_error(Exception("too many requests, slow down")) is True
+
+
+def test_rate_underscore_limit_in_message():
+    assert _is_rate_limit_error(Exception("rate_limit error from API")) is True
+
+
+def test_chained_cause_is_rate_limit():
+    inner = Exception("429 rate limit")
+    outer = Exception("embedding failed")
+    outer.__cause__ = inner
+    assert _is_rate_limit_error(outer) is True
+
+
+def test_non_rate_limit_error_returns_false():
+    assert _is_rate_limit_error(ValueError("invalid input")) is False
+
+
+def test_auth_error_not_retried():
+    assert _is_rate_limit_error(Exception("401 Unauthorized")) is False
+
+
+def test_empty_message_returns_false():
+    assert _is_rate_limit_error(Exception("")) is False
+```
+
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] Existing tests pass: run `uv run pytest` from `packages/parser-v1/`
+- [ ] All tests pass (including new predicate tests): run `uv run pytest` from `packages/parser-v1/`
 - [ ] Linting passes: run `uv run ruff check packages/parser-v1/src/`
 - [ ] File is valid Python: run `uv run python -c "import parser_v1.scripts.ingest_pdfs"`
+- [ ] New test file exists: `packages/parser-v1/src/parser_v1/tests/test_ingest_pdfs.py`
 
 #### Manual Verification:
 - [ ] Run full ingestion (`uv run python -m parser_v1.scripts.ingest_pdfs`) and confirm retry logs appear when rate-limited
@@ -255,7 +312,9 @@ def _run_pipeline_with_retry(pipeline: IngestionPipeline, documents: list) -> li
 ## Testing Strategy
 
 ### Unit Tests:
-- The `_is_rate_limit_error` predicate could be unit tested, but since this is a small utility and the real validation is the manual ingestion run, no new unit tests are required for this change.
+Add a new test file `packages/parser-v1/src/parser_v1/tests/test_ingest_pdfs.py` with tests for `_is_rate_limit_error`. The predicate contains non-trivial logic (multiple string patterns, recursive `__cause__` checking) that is worth protecting against regressions. See Step 1.4 for the full implementation.
+
+Existing tests must continue to pass: `uv run pytest` from `packages/parser-v1/`.
 
 ### Manual Testing Steps:
 1. From the project root, run `uv run python -m parser_v1.scripts.ingest_pdfs`

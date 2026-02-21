@@ -84,7 +84,9 @@
       "mcp__llama_index_docs__read_doc",
       "Skill(commit-push-pr)",
       "Bash(cd:*)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:clusteredbytes.pages.dev)",
+      "WebFetch(domain:docs.trychroma.com)"
     ]
   }
 }

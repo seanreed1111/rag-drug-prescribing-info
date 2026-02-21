@@ -6,7 +6,7 @@ model: sonnet
 
 # Plan Review
 
-You are tasked with reviewing implementation plans to assess their quality, completeness, inconsistencies, ambiguity, and executability. Your goal is to provide constructive detailed feedback that helps improve plans before execution. The goal: any agent should be able to execute the plan without further questoins to the user or any further user input. 
+You are tasked with reviewing implementation plans to assess their quality, completeness, inconsistencies, ambiguity, and executability. Your goal is to provide constructive detailed feedback that helps improve plans before execution. The goal: any agent should be able to execute the plan without further questions to the user or any further user input. 
 
 ## Initial Response
 
