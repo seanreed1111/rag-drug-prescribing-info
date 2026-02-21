@@ -8,13 +8,27 @@ A collection of FDA-approved prescribing information (package inserts) for the t
 drug-prescribing-info/
 ├── README.md                  # This file
 ├── top_50_drugs.md            # Ranked list of the top 50 drugs with sales data and indications
+├── pyproject.toml             # uv workspace root
 ├── prescribing_info/          # 50 FDA prescribing information PDFs (78 MB total)
 │   ├── keytruda_prescribing_info.pdf
 │   ├── ozempic_prescribing_info.pdf
 │   └── ...
-└── scripts/
-    ├── download_prescribing_info.py   # Downloads prescribing info for drugs ranked 1-20
-    └── download_remaining.py          # Downloads prescribing info for drugs ranked 21-50
+├── chroma_db/                 # ChromaDB vector store (local, gitignored)
+├── packages/
+│   ├── parser-v1/             # PDF parsing, embedding, and query package
+│   │   └── src/parser_v1/
+│   │       ├── config.py
+│   │       ├── scripts/
+│   │       │   ├── download_prescribing_info.py  # Downloads PDFs for drugs ranked 1-20
+│   │       │   ├── download_remaining.py         # Downloads PDFs for drugs ranked 21-50
+│   │       │   ├── drug_metadata.py              # Drug name/metadata helpers
+│   │       │   ├── ingest_pdfs.py                # Ingests PDFs into ChromaDB
+│   │       │   ├── pdf_section_parser.py         # Section-aware PDF chunker
+│   │       │   └── query.py                      # Query the ChromaDB vector store
+│   │       └── tests/
+│   └── parser-v2/             # Next-generation parser (in development)
+├── plan/                      # Implementation plans and design docs
+└── thoughts/                  # Research notes and exploratory docs
 ```
 
 ## Data Contents
@@ -36,11 +50,74 @@ drug-prescribing-info/
 The scripts use the DailyMed REST API (no API key required) to look up each drug and download its prescribing information PDF. To re-download:
 
 ```bash
-python scripts/download_prescribing_info.py   # drugs 1-20
-python scripts/download_remaining.py           # drugs 21-50
+uv run python packages/parser-v1/src/parser_v1/scripts/download_prescribing_info.py   # drugs 1-20
+uv run python packages/parser-v1/src/parser_v1/scripts/download_remaining.py           # drugs 21-50
 ```
 
 PDFs are saved to `prescribing_info/`. The scripts include a 1-second delay between requests to be respectful to the DailyMed API.
+
+## ChromaDB Vector Store
+
+The PDFs are ingested into a local ChromaDB collection (`chroma_db/`) using section-aware chunking and Cohere embed-v4 embeddings. See `packages/parser-v1/src/parser_v1/scripts/ingest_pdfs.py` to run ingestion and `packages/parser-v1/src/parser_v1/scripts/query.py` to query the store.
+
+### PDFs Ingested into ChromaDB
+
+48 of 50 PDFs have been embedded and stored:
+
+| Drug (Brand) | File | Sections | Chunks |
+|---|---|---|---|
+| Biktarvy | `biktarvy_prescribing_info.pdf` | 15 | 47 |
+| Comirnaty | `comirnaty_prescribing_info.pdf` | 13 | 66 |
+| Cosentyx | `cosentyx_prescribing_info.pdf` | 15 | 55 |
+| Darzalex | `darzalex_prescribing_info.pdf` | 15 | 60 |
+| Dupixent | `dupixent_prescribing_info.pdf` | 18 | 90 |
+| Eliquis | `eliquis_prescribing_info.pdf` | 16 | 40 |
+| Entresto | `entresto_prescribing_info.pdf` | 18 | 36 |
+| Entyvio | `entyvio_prescribing_info.pdf` | 16 | 42 |
+| Eylea | `eylea_prescribing_info.pdf` | 14 | 26 |
+| Farxiga | `farxiga_prescribing_info.pdf` | 15 | 53 |
+| Gardasil | `gardasil_prescribing_info.pdf` | 18 | 53 |
+| Hemlibra | `hemlibra_prescribing_info.pdf` | 15 | 38 |
+| Humira | `humira_prescribing_info.pdf` | 21 | 77 |
+| Ibrance | `ibrance_prescribing_info.pdf` | 18 | 36 |
+| Imbruvica | `imbruvica_prescribing_info.pdf` | 16 | 53 |
+| Imfinzi | `imfinzi_prescribing_info.pdf` | 18 | 71 |
+| Invega Sustenna | `invega_sustenna_prescribing_info.pdf` | 22 | 53 |
+| Jardiance | `jardiance_prescribing_info.pdf` | 16 | 51 |
+| Lynparza | `lynparza_prescribing_info.pdf` | 17 | 53 |
+| Mounjaro | `mounjaro_prescribing_info.pdf` | 18 | 64 |
+| Ocrevus | `ocrevus_prescribing_info.pdf` | 14 | 28 |
+| OFEV | `ofev_prescribing_info.pdf` | 15 | 35 |
+| Orencia | `orencia_prescribing_info.pdf` | 16 | 43 |
+| Ozempic | `ozempic_prescribing_info.pdf` | 20 | 53 |
+| Paxlovid | `paxlovid_prescribing_info.pdf` | 15 | 52 |
+| Perjeta | `perjeta_prescribing_info.pdf` | 13 | 34 |
+| Pomalyst | `pomalyst_prescribing_info.pdf` | 17 | 42 |
+| Prevnar | `prevnar_prescribing_info.pdf` | 14 | 52 |
+| Prolia | `prolia_prescribing_info.pdf` | 13 | 33 |
+| Revlimid | `revlimid_prescribing_info.pdf` | 16 | 75 |
+| Rinvoq | `rinvoq_prescribing_info.pdf` | 14 | 80 |
+| Rybelsus | `rybelsus_prescribing_info.pdf` | 21 | 41 |
+| Shingrix | `shingrix_prescribing_info.pdf` | 18 | 35 |
+| Skyrizi | `skyrizi_prescribing_info.pdf` | 14 | 71 |
+| Stelara | `stelara_prescribing_info.pdf` | 18 | 46 |
+| Tagrisso | `tagrisso_prescribing_info.pdf` | 17 | 46 |
+| Tecentriq | `tecentriq_prescribing_info.pdf` | 13 | 74 |
+| Tremfya | `tremfya_prescribing_info.pdf` | 14 | 57 |
+| Trikafta | `trikafta_prescribing_info.pdf` | 15 | 54 |
+| Trulicity | `trulicity_prescribing_info.pdf` | 16 | 57 |
+| Vabysmo | `vabysmo_prescribing_info.pdf` | 13 | 18 |
+| Verzenio | `verzenio_prescribing_info.pdf` | 15 | 39 |
+| Vyndaqel | `vyndaqel_prescribing_info.pdf` | 2 | 13 |
+| Wegovy | `wegovy_prescribing_info.pdf` | 15 | 61 |
+| Xarelto | `xarelto_prescribing_info.pdf` | 16 | 52 |
+| Xolair | `xolair_prescribing_info.pdf` | 17 | 58 |
+| Xtandi | `xtandi_prescribing_info.pdf` | 20 | 41 |
+| Zepbound | `zepbound_prescribing_info.pdf` | 16 | 70 |
+
+**Total: 2,424 chunks across 48 drugs**
+
+> **Note:** 2 PDFs (Keytruda, Opdivo) failed to ingest — they exceeded the Cohere trial API rate limit (100K tokens/min) even after 6 retry attempts with exponential backoff. To ingest these, wait for the per-minute token window to reset and re-run `uv run python -m parser_v1.scripts.ingest_pdfs` (the script will skip the 48 already-ingested PDFs). To ingest all 50 reliably, upgrade your Cohere account.
 
 ## Date Collected
 
