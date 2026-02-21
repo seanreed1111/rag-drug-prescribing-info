@@ -4,21 +4,14 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [
-    "chromadb>=1.5.1",
-    "llama-index-vector-stores-chroma>=0.5.5",
-    "llama-index>=0.14.15",
-    "llama-index-embeddings-cohere>=0.7.0",
-    "python-dotenv>=1.2.1",
-    "loguru>=0.7.3",
-    "pre-commit>=4.5.1",
-]
+dependencies = []
 
 [dependency-groups]
 dev = [
-    "pytest>=9.0.2",
     "ruff>=0.15.2",
     "ty>=0.0.18",
+    "pytest>=9.0.2",
+    "pre-commit>=4.5.1",
 ]
 
 [tool.ruff]
@@ -38,8 +31,7 @@ indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
 
-[tool.pytest.ini_options]
-testpaths = ["src/tests"]
+
 
 [tool.ty.src]
 include = ["src"]
@@ -50,3 +42,6 @@ python-version = "3.12"
 
 [tool.ty.rules]
 all = "warn"
+
+[tool.uv.workspace]
+members = ["dummy-package", "packages/parser-v2", "packages/parser-v1"]

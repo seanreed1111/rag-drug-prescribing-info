@@ -1,0 +1,17 @@
+[project]
+name = "parser-v2"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Sean Reed", email = "sreed1111@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+parser-v2 = "parser_v2:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

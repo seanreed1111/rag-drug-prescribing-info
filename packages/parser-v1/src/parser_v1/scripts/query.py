@@ -10,16 +10,13 @@ from llama_index.core import VectorStoreIndex
 from llama_index.embeddings.cohere import CohereEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
 
-PROJECT_ROOT = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
+from parser_v1.config import COLLECTION_NAME
 
-from src.config import COLLECTION_NAME
-
-CHROMA_DB_DIR = PROJECT_ROOT / "chroma_db"
+CHROMA_DB_DIR = Path.cwd() / "chroma_db"
 
 
 def main():
-    load_dotenv(PROJECT_ROOT / ".env")
+    load_dotenv()
 
     cohere_key = os.environ.get("COHERE_API_KEY")
     if not cohere_key:

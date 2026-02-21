@@ -5,6 +5,7 @@ import os
 import time
 import urllib.request
 import urllib.error
+from pathlib import Path
 
 DRUGS = [
     ("biktarvy", "bictegravir emtricitabine tenofovir"),
@@ -39,7 +40,7 @@ DRUGS = [
     ("imbruvica", "ibrutinib"),
 ]
 
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "prescribing_info")
+OUTPUT_DIR = str(Path.cwd() / "prescribing_info")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 BASE_API = "https://dailymed.nlm.nih.gov/dailymed/services/v2"

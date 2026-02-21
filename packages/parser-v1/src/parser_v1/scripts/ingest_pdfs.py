@@ -12,17 +12,13 @@ from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.cohere import CohereEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
 
-# Add project root to path for src imports
-PROJECT_ROOT = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
-
-from src.config import COLLECTION_NAME
-from src.drug_metadata import get_drug_metadata
-from src.pdf_section_parser import parse_pdf_into_sections
+from parser_v1.config import COLLECTION_NAME
+from parser_v1.scripts.drug_metadata import get_drug_metadata
+from parser_v1.scripts.pdf_section_parser import parse_pdf_into_sections
 
 # Paths
-PRESCRIBING_INFO_DIR = PROJECT_ROOT / "prescribing_info"
-CHROMA_DB_DIR = PROJECT_ROOT / "chroma_db"
+PRESCRIBING_INFO_DIR = Path.cwd() / "prescribing_info"
+CHROMA_DB_DIR = Path.cwd() / "chroma_db"
 
 
 def build_pipeline(vector_store: ChromaVectorStore, api_key: str) -> IngestionPipeline:
@@ -43,7 +39,7 @@ def build_pipeline(vector_store: ChromaVectorStore, api_key: str) -> IngestionPi
 
 
 def main():
-    load_dotenv(PROJECT_ROOT / ".env")
+    load_dotenv()
 
     cohere_key = os.environ.get("COHERE_API_KEY")
     if not cohere_key:
@@ -78,6 +74,7 @@ def main():
 
     total_nodes = 0
     failed = []
+    md_path = Path.cwd() / "top_50_drugs.md"
 
     for i, pdf_path in enumerate(pdf_files, 1):
         print(f"[{i}/{len(pdf_files)}] {pdf_path.name}...")
@@ -85,7 +82,7 @@ def main():
 
         try:
             # Get drug metadata
-            drug_meta = get_drug_metadata(pdf_path.name)
+            drug_meta = get_drug_metadata(pdf_path.name, md_path=md_path)
 
             # Parse PDF into section-level documents with metadata
             documents = parse_pdf_into_sections(pdf_path, base_metadata=drug_meta)

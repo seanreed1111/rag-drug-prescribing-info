@@ -142,7 +142,10 @@ def get_drug_metadata(pdf_filename: str, md_path: Path | None = None) -> dict:
     global _REGISTRY
     if _REGISTRY is None:
         if md_path is None:
-            md_path = Path(__file__).parent.parent / "top_50_drugs.md"
+            raise ValueError(
+                "md_path must be provided on the first call to get_drug_metadata "
+                "(before the registry is initialised)"
+            )
         _REGISTRY = _parse_top_50_drugs(md_path)
 
     # Extract stem from filename: "keytruda_prescribing_info.pdf" -> "keytruda"

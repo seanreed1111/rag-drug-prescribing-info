@@ -2,13 +2,13 @@
 
 from pathlib import Path
 
-from src.pdf_section_parser import (
+from parser_v1.scripts.pdf_section_parser import (
     parse_pdf_into_sections,
     _find_sections,
     _deduplicate_sections,
 )
 
-PRESCRIBING_INFO_DIR = Path(__file__).parent.parent.parent / "prescribing_info"
+PRESCRIBING_INFO_DIR = Path(__file__).parents[5] / "prescribing_info"
 
 
 def test_find_sections_basic():

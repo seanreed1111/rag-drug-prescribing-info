@@ -83,7 +83,8 @@
       "mcp__llama_index_docs__grep_docs",
       "mcp__llama_index_docs__read_doc",
       "Skill(commit-push-pr)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }

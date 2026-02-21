@@ -1,3 +1,28 @@
+---
+description: Create a robust Python .gitignore at the git repo root
+allowed-tools: Bash(git rev-parse:*), Read, Write, Bash(pwd:*)
+---
+
+Create a robust `.gitignore` file for Python projects at the git repository root.
+
+## Instructions
+
+Generate and write a `.gitignore` file that covers:
+
+1. **Python artifacts** — bytecode, compiled extensions, cache dirs, eggs, distributions, packaging, virtual environments, installers
+2. **Testing & coverage** — pytest cache, coverage reports, tox, mypy, ruff, pytype caches
+3. **Dev tools** — VS Code, PyCharm, Jupyter, Spyder, rope
+4. **OS files** — macOS `.DS_Store`, Windows `Thumbs.db`, Linux `*~`
+5. **Temp & log directories** — `tmp/`, `temp/`, `logs/`, `log/`, and common log file extensions
+6. **Secrets** — `.env`, `.env.*`, `*.pem`, `*.key`, `secrets.*`
+
+### Steps
+
+1. Run `git rev-parse --show-toplevel` to find the repository root. If this fails (not a git repo), fall back to `pwd` and warn the user.
+2. Check if a `.gitignore` already exists at that root path. If it does, show the user its contents and ask whether to overwrite or append.
+3. Write the following content to `<repo-root>/.gitignore` (overwrite or append based on user choice):
+
+```
 # ── Python ───────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
@@ -149,7 +174,6 @@ $RECYCLE.BIN/
 .directory
 .Trash-*
 .nfs*
+```
 
-# ── Project-specific ──────────────────────────────────────────────────────────
-# Vector database
-chroma_db/
+4. After writing the file, confirm success and print the absolute path of the file created.

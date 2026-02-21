@@ -8,13 +8,27 @@ A collection of FDA-approved prescribing information (package inserts) for the t
 drug-prescribing-info/
 ├── README.md                  # This file
 ├── top_50_drugs.md            # Ranked list of the top 50 drugs with sales data and indications
+├── pyproject.toml             # uv workspace root
 ├── prescribing_info/          # 50 FDA prescribing information PDFs (78 MB total)
 │   ├── keytruda_prescribing_info.pdf
 │   ├── ozempic_prescribing_info.pdf
 │   └── ...
-└── scripts/
-    ├── download_prescribing_info.py   # Downloads prescribing info for drugs ranked 1-20
-    └── download_remaining.py          # Downloads prescribing info for drugs ranked 21-50
+├── chroma_db/                 # ChromaDB vector store (local, gitignored)
+├── packages/
+│   ├── parser-v1/             # PDF parsing, embedding, and query package
+│   │   └── src/parser_v1/
+│   │       ├── config.py
+│   │       ├── scripts/
+│   │       │   ├── download_prescribing_info.py  # Downloads PDFs for drugs ranked 1-20
+│   │       │   ├── download_remaining.py         # Downloads PDFs for drugs ranked 21-50
+│   │       │   ├── drug_metadata.py              # Drug name/metadata helpers
+│   │       │   ├── ingest_pdfs.py                # Ingests PDFs into ChromaDB
+│   │       │   ├── pdf_section_parser.py         # Section-aware PDF chunker
+│   │       │   └── query.py                      # Query the ChromaDB vector store
+│   │       └── tests/
+│   └── parser-v2/             # Next-generation parser (in development)
+├── plan/                      # Implementation plans and design docs
+└── thoughts/                  # Research notes and exploratory docs
 ```
 
 ## Data Contents
@@ -36,15 +50,15 @@ drug-prescribing-info/
 The scripts use the DailyMed REST API (no API key required) to look up each drug and download its prescribing information PDF. To re-download:
 
 ```bash
-python scripts/download_prescribing_info.py   # drugs 1-20
-python scripts/download_remaining.py           # drugs 21-50
+uv run python packages/parser-v1/src/parser_v1/scripts/download_prescribing_info.py   # drugs 1-20
+uv run python packages/parser-v1/src/parser_v1/scripts/download_remaining.py           # drugs 21-50
 ```
 
 PDFs are saved to `prescribing_info/`. The scripts include a 1-second delay between requests to be respectful to the DailyMed API.
 
 ## ChromaDB Vector Store
 
-The PDFs are ingested into a local ChromaDB collection (`chroma_db/`) using section-aware chunking and Cohere embed-v4 embeddings. See `scripts/ingest_pdfs.py` to run ingestion and `scripts/query.py` to query the store.
+The PDFs are ingested into a local ChromaDB collection (`chroma_db/`) using section-aware chunking and Cohere embed-v4 embeddings. See `packages/parser-v1/src/parser_v1/scripts/ingest_pdfs.py` to run ingestion and `packages/parser-v1/src/parser_v1/scripts/query.py` to query the store.
 
 ### PDFs Ingested into ChromaDB
 
@@ -72,7 +86,7 @@ The PDFs are ingested into a local ChromaDB collection (`chroma_db/`) using sect
 
 **Total: 822 chunks across 17 drugs**
 
-> **Note:** The remaining 33 PDFs failed due to Cohere trial API rate limits (100K tokens/min). To ingest all 50, upgrade your Cohere account and re-run `uv run python scripts/ingest_pdfs.py`.
+> **Note:** The remaining 33 PDFs failed due to Cohere trial API rate limits (100K tokens/min). To ingest all 50, upgrade your Cohere account and re-run `uv run python packages/parser-v1/src/parser_v1/scripts/ingest_pdfs.py`.
 
 ## Date Collected
 

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /c/Users/sqr99/NewPythonProjects/rag-models/drug-prescribing-info && uv run python -c \"from parser_v1.scripts.drug_metadata import get_drug_metadata; print\\('OK'\\)\" 2>&1)",
+      "Bash(cd /c/Users/sqr99/NewPythonProjects/rag-models/drug-prescribing-info && uv run python -c \"from parser_v1.scripts.pdf_section_parser import parse_pdf_into_sections; print\\('OK'\\)\" 2>&1)",
+      "Bash(cd /c/Users/sqr99/NewPythonProjects/rag-models/drug-prescribing-info && uv run pytest packages/parser-v1/src/parser_v1/tests/ -v 2>&1)"
+    ]
+  }
+}
