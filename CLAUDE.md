@@ -18,6 +18,14 @@ uv add <package>
 uv sync
 ```
 
+## Important: Package Management
+
+- NEVER modify pyproject.toml to add new dependencies to a project.
+- **Always use `uv add <package>`** to add new dependencies instead. This ensures you get the latest compatible versions.
+- Run `date -Iseconds` to check the current date before suggesting Python packages or versions.
+- Do not assume package versions do not exist based on training data—always verify against `uv.lock` and `pyproject.toml` in the repository, which reflect actually working versions.
+
+
 ## Architecture
 
 - **`prescribing_info/`** — 50 FDA prescribing information PDFs (~78 MB), one per drug, named `{brand}_prescribing_info.pdf`

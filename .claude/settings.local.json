@@ -78,7 +78,12 @@
       "WebFetch(domain:api.imgflip.com)",
       "WebFetch(domain:www.drugdiscoverytrends.com)",
       "WebFetch(domain:xtalks.com)",
-      "Bash(uv init:*)"
+      "Bash(uv init:*)",
+      "mcp__llama_index_docs__search_docs",
+      "mcp__llama_index_docs__grep_docs",
+      "mcp__llama_index_docs__read_doc",
+      "Skill(commit-push-pr)",
+      "Bash(cd:*)"
     ]
   }
 }

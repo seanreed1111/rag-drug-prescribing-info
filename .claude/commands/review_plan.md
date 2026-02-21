@@ -1,6 +1,6 @@
 ---
 description: Review implementation plans for quality, completeness, and executability
-model: opus
+model: sonnet
 
 ---
 
