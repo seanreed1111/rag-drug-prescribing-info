@@ -5,14 +5,60 @@ from pathlib import Path
 
 # Map therapeutic areas from indications text
 THERAPEUTIC_AREA_KEYWORDS = {
-    "Oncology": ["cancer", "tumor", "carcinoma", "lymphoma", "myeloma", "leukemia", "melanoma", "sarcoma", "oncology"],
-    "Immunology": ["psoriasis", "arthritis", "dermatitis", "crohn", "colitis", "lupus", "spondylitis", "autoimmune"],
+    "Oncology": [
+        "cancer",
+        "tumor",
+        "carcinoma",
+        "lymphoma",
+        "myeloma",
+        "leukemia",
+        "melanoma",
+        "sarcoma",
+        "oncology",
+    ],
+    "Immunology": [
+        "psoriasis",
+        "arthritis",
+        "dermatitis",
+        "crohn",
+        "colitis",
+        "lupus",
+        "spondylitis",
+        "autoimmune",
+    ],
     "Metabolic/Endocrine": ["diabetes", "obesity", "weight management", "glycemic"],
-    "Cardiovascular": ["heart failure", "atrial fibrillation", "stroke", "anticoagulant", "thrombosis", "cardiomyopathy", "embolism"],
+    "Cardiovascular": [
+        "heart failure",
+        "atrial fibrillation",
+        "stroke",
+        "anticoagulant",
+        "thrombosis",
+        "cardiomyopathy",
+        "embolism",
+    ],
     "Neurology": ["multiple sclerosis", "sclerosis"],
-    "Infectious Disease": ["hiv", "covid", "vaccine", "pneumococcal", "zoster", "shingles", "papillomavirus"],
-    "Ophthalmology": ["macular degeneration", "macular edema", "retinopathy", "diabetic eye"],
-    "Respiratory": ["asthma", "copd", "pulmonary fibrosis", "interstitial lung", "cystic fibrosis"],
+    "Infectious Disease": [
+        "hiv",
+        "covid",
+        "vaccine",
+        "pneumococcal",
+        "zoster",
+        "shingles",
+        "papillomavirus",
+    ],
+    "Ophthalmology": [
+        "macular degeneration",
+        "macular edema",
+        "retinopathy",
+        "diabetic eye",
+    ],
+    "Respiratory": [
+        "asthma",
+        "copd",
+        "pulmonary fibrosis",
+        "interstitial lung",
+        "cystic fibrosis",
+    ],
     "Hematology": ["hemophilia", "myelodysplastic", "factor viii"],
     "Bone Health": ["osteoporosis", "fracture", "bone loss"],
     "Psychiatry": ["schizophrenia", "schizoaffective"],
@@ -40,12 +86,12 @@ def _parse_top_50_drugs(md_path: Path) -> dict[str, dict]:
 
     # Match markdown table rows: | rank | brand | generic | manufacturer | sales | indications |
     row_pattern = re.compile(
-        r"^\|\s*(\d+)\s*\|"       # rank
-        r"\s*([^|]+?)\s*\|"       # brand name
-        r"\s*([^|]+?)\s*\|"       # generic name
-        r"\s*([^|]+?)\s*\|"       # manufacturer
-        r"\s*[^|]+?\s*\|"         # sales (skip)
-        r"\s*([^|]+?)\s*\|",      # indications
+        r"^\|\s*(\d+)\s*\|"  # rank
+        r"\s*([^|]+?)\s*\|"  # brand name
+        r"\s*([^|]+?)\s*\|"  # generic name
+        r"\s*([^|]+?)\s*\|"  # manufacturer
+        r"\s*[^|]+?\s*\|"  # sales (skip)
+        r"\s*([^|]+?)\s*\|",  # indications
         re.MULTILINE,
     )
 
@@ -100,7 +146,9 @@ def get_drug_metadata(pdf_filename: str, md_path: Path | None = None) -> dict:
         _REGISTRY = _parse_top_50_drugs(md_path)
 
     # Extract stem from filename: "keytruda_prescribing_info.pdf" -> "keytruda"
-    stem = pdf_filename.replace("_prescribing_info.pdf", "").replace("_prescribing_info.xml", "")
+    stem = pdf_filename.replace("_prescribing_info.pdf", "").replace(
+        "_prescribing_info.xml", ""
+    )
 
     if stem in _REGISTRY:
         return _REGISTRY[stem]

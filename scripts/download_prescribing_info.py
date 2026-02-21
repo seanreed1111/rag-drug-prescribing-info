@@ -1,4 +1,5 @@
 """Download prescribing information PDFs from DailyMed for top 20 drugs."""
+
 import json
 import os
 import time
@@ -33,6 +34,7 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 BASE_API = "https://dailymed.nlm.nih.gov/dailymed/services/v2"
 
+
 def get_setid(brand_name, generic_name):
     """Get the DailyMed set ID for a drug by brand name, fallback to generic."""
     for name in [brand_name, generic_name]:
@@ -48,16 +50,21 @@ def get_setid(brand_name, generic_name):
         time.sleep(0.5)
     return None, None
 
+
 def download_pdf(setid, filename):
     """Download the prescribing information PDF from DailyMed."""
-    pdf_url = f"https://dailymed.nlm.nih.gov/dailymed/getFile.cfm?setid={setid}&type=pdf"
+    pdf_url = (
+        f"https://dailymed.nlm.nih.gov/dailymed/getFile.cfm?setid={setid}&type=pdf"
+    )
     filepath = os.path.join(OUTPUT_DIR, filename)
     try:
         req = urllib.request.Request(pdf_url, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=60) as resp:
             content = resp.read()
             if len(content) < 1000:
-                print(f"  Warning: PDF seems too small ({len(content)} bytes), may not be valid")
+                print(
+                    f"  Warning: PDF seems too small ({len(content)} bytes), may not be valid"
+                )
                 # Try alternative: download XML instead
                 return download_xml(setid, filename.replace(".pdf", ".xml"))
             with open(filepath, "wb") as f:
@@ -67,6 +74,7 @@ def download_pdf(setid, filename):
     except Exception as e:
         print(f"  PDF download failed: {e}")
         return download_xml(setid, filename.replace(".pdf", ".xml"))
+
 
 def download_xml(setid, filename):
     """Fallback: download the SPL XML from DailyMed."""
@@ -83,6 +91,7 @@ def download_xml(setid, filename):
     except Exception as e:
         print(f"  XML download also failed: {e}")
         return False
+
 
 def main():
     results = []
@@ -109,6 +118,7 @@ def main():
 
     succeeded = sum(1 for _, s in results if s)
     print(f"\nDownloaded {succeeded}/{len(results)} prescribing information documents.")
+
 
 if __name__ == "__main__":
     main()

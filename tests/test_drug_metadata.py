@@ -2,7 +2,11 @@
 
 from pathlib import Path
 
-from src.drug_metadata import get_drug_metadata, _parse_top_50_drugs, _classify_therapeutic_area
+from src.drug_metadata import (
+    get_drug_metadata,
+    _parse_top_50_drugs,
+    _classify_therapeutic_area,
+)
 
 TOP_50_DRUGS_PATH = Path(__file__).parent.parent / "top_50_drugs.md"
 
@@ -33,15 +37,24 @@ def test_unknown_drug_returns_fallback():
 
 
 def test_classify_therapeutic_area_oncology():
-    assert _classify_therapeutic_area("Treatment of melanoma and NSCLC cancer") == "Oncology"
+    assert (
+        _classify_therapeutic_area("Treatment of melanoma and NSCLC cancer")
+        == "Oncology"
+    )
 
 
 def test_classify_therapeutic_area_cardiovascular():
-    assert _classify_therapeutic_area("Prevention of stroke and atrial fibrillation") == "Cardiovascular"
+    assert (
+        _classify_therapeutic_area("Prevention of stroke and atrial fibrillation")
+        == "Cardiovascular"
+    )
 
 
 def test_classify_therapeutic_area_other():
-    assert _classify_therapeutic_area("Treatment of rare unclassified condition") == "Other"
+    assert (
+        _classify_therapeutic_area("Treatment of rare unclassified condition")
+        == "Other"
+    )
 
 
 def test_parse_top_50_drugs_count():
@@ -50,4 +63,6 @@ def test_parse_top_50_drugs_count():
     registry = _parse_top_50_drugs(TOP_50_DRUGS_PATH)
     # Should have at least 50 entries (some drugs have multiple stems)
     unique_brands = {v["brand_name"] for v in registry.values()}
-    assert len(unique_brands) >= 50, f"Expected at least 50 unique drugs, got {len(unique_brands)}"
+    assert len(unique_brands) >= 50, (
+        f"Expected at least 50 unique drugs, got {len(unique_brands)}"
+    )

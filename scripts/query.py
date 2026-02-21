@@ -39,7 +39,9 @@ def main():
     chroma_collection = chroma_client.get_collection(COLLECTION_NAME)
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
 
-    print(f"Collection '{COLLECTION_NAME}' loaded ({chroma_collection.count()} chunks)\n")
+    print(
+        f"Collection '{COLLECTION_NAME}' loaded ({chroma_collection.count()} chunks)\n"
+    )
 
     # Create index with Cohere embeddings (search_query mode for retrieval)
     embed_model = CohereEmbedding(

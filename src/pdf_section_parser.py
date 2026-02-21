@@ -43,7 +43,9 @@ def _find_sections(text: str) -> list[tuple[str, str, int]]:
     return sections
 
 
-def _deduplicate_sections(sections: list[tuple[str, str, int]]) -> list[tuple[str, str, int]]:
+def _deduplicate_sections(
+    sections: list[tuple[str, str, int]],
+) -> list[tuple[str, str, int]]:
     """Remove duplicate section headers (TOC entries vs actual sections).
 
     The TOC at the beginning lists sections, then they appear again in the body.

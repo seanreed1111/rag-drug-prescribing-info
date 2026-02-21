@@ -72,7 +72,9 @@ def main():
 
     xml_files = sorted(PRESCRIBING_INFO_DIR.glob("*.xml"))
     if xml_files:
-        print(f"Warning: Found {len(xml_files)} XML fallback file(s) — not ingested: {[f.name for f in xml_files]}\n")
+        print(
+            f"Warning: Found {len(xml_files)} XML fallback file(s) — not ingested: {[f.name for f in xml_files]}\n"
+        )
 
     total_nodes = 0
     failed = []
@@ -92,7 +94,9 @@ def main():
             nodes = pipeline.run(documents=documents)
             elapsed = time.time() - start
 
-            print(f"  -> {len(documents)} sections -> {len(nodes)} chunks ({elapsed:.1f}s)")
+            print(
+                f"  -> {len(documents)} sections -> {len(nodes)} chunks ({elapsed:.1f}s)"
+            )
             total_nodes += len(nodes)
 
         except Exception as e:
@@ -102,7 +106,7 @@ def main():
 
     # Summary
     print(f"\n{'=' * 60}")
-    print(f"INGESTION COMPLETE")
+    print("INGESTION COMPLETE")
     print(f"{'=' * 60}")
     print(f"Total PDFs processed: {len(pdf_files) - len(failed)}/{len(pdf_files)}")
     print(f"Total chunks stored:  {total_nodes}")

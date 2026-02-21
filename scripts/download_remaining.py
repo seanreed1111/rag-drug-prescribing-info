@@ -1,4 +1,5 @@
 """Download prescribing information PDFs from DailyMed for drugs ranked 21-50."""
+
 import json
 import os
 import time
@@ -43,6 +44,7 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 BASE_API = "https://dailymed.nlm.nih.gov/dailymed/services/v2"
 
+
 def get_setid(brand_name, generic_name):
     for name in [brand_name, generic_name]:
         url = f"{BASE_API}/spls.json?drug_name={urllib.request.quote(name)}&page=1&pagesize=1"
@@ -57,8 +59,11 @@ def get_setid(brand_name, generic_name):
         time.sleep(0.5)
     return None, None
 
+
 def download_pdf(setid, filename):
-    pdf_url = f"https://dailymed.nlm.nih.gov/dailymed/getFile.cfm?setid={setid}&type=pdf"
+    pdf_url = (
+        f"https://dailymed.nlm.nih.gov/dailymed/getFile.cfm?setid={setid}&type=pdf"
+    )
     filepath = os.path.join(OUTPUT_DIR, filename)
     try:
         req = urllib.request.Request(pdf_url, headers={"User-Agent": "Mozilla/5.0"})
@@ -75,6 +80,7 @@ def download_pdf(setid, filename):
         print(f"  PDF download failed: {e}")
         return download_xml(setid, filename.replace(".pdf", ".xml"))
 
+
 def download_xml(setid, filename):
     xml_url = f"{BASE_API}/spls/{setid}.xml"
     filepath = os.path.join(OUTPUT_DIR, filename)
@@ -89,6 +95,7 @@ def download_xml(setid, filename):
     except Exception as e:
         print(f"  XML download also failed: {e}")
         return False
+
 
 def main():
     results = []
@@ -117,6 +124,7 @@ def main():
 
     succeeded = sum(1 for _, s in results if s)
     print(f"\nDownloaded {succeeded}/{len(results)} prescribing information documents.")
+
 
 if __name__ == "__main__":
     main()

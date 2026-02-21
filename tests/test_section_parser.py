@@ -2,7 +2,11 @@
 
 from pathlib import Path
 
-from src.pdf_section_parser import parse_pdf_into_sections, _find_sections, _deduplicate_sections
+from src.pdf_section_parser import (
+    parse_pdf_into_sections,
+    _find_sections,
+    _deduplicate_sections,
+)
 
 PRESCRIBING_INFO_DIR = Path(__file__).parent.parent / "prescribing_info"
 
@@ -37,10 +41,10 @@ May cause liver damage.
 def test_deduplicate_sections():
     # Simulate TOC + body duplication
     sections = [
-        ("1", "INDICATIONS AND USAGE", 10),    # TOC entry
-        ("2", "DOSAGE AND ADMINISTRATION", 50), # TOC entry
-        ("1", "INDICATIONS AND USAGE", 200),    # Body entry
-        ("2", "DOSAGE AND ADMINISTRATION", 500),# Body entry
+        ("1", "INDICATIONS AND USAGE", 10),  # TOC entry
+        ("2", "DOSAGE AND ADMINISTRATION", 50),  # TOC entry
+        ("1", "INDICATIONS AND USAGE", 200),  # Body entry
+        ("2", "DOSAGE AND ADMINISTRATION", 500),  # Body entry
     ]
     deduped = _deduplicate_sections(sections)
     assert len(deduped) == 2
@@ -67,9 +71,15 @@ def test_parse_real_pdf_eliquis():
 
     # Check that we found key sections
     section_names = [doc.metadata["fda_section"] for doc in docs]
-    assert any("INDICATIONS" in s for s in section_names), f"No INDICATIONS section found in {section_names}"
-    assert any("WARNINGS" in s for s in section_names), f"No WARNINGS section found in {section_names}"
-    assert any("ADVERSE" in s for s in section_names), f"No ADVERSE section found in {section_names}"
+    assert any("INDICATIONS" in s for s in section_names), (
+        f"No INDICATIONS section found in {section_names}"
+    )
+    assert any("WARNINGS" in s for s in section_names), (
+        f"No WARNINGS section found in {section_names}"
+    )
+    assert any("ADVERSE" in s for s in section_names), (
+        f"No ADVERSE section found in {section_names}"
+    )
 
 
 def test_parse_real_pdf_keytruda():
@@ -79,7 +89,9 @@ def test_parse_real_pdf_keytruda():
         return
 
     docs = parse_pdf_into_sections(pdf_path)
-    assert len(docs) > 10, f"Expected at least 10 sections for Keytruda, got {len(docs)}"
+    assert len(docs) > 10, (
+        f"Expected at least 10 sections for Keytruda, got {len(docs)}"
+    )
 
     # Subsections should have parent section info
     subsection_docs = [d for d in docs if d.metadata["fda_subsection"]]
