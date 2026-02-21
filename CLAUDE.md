@@ -10,8 +10,8 @@ RAG (Retrieval-Augmented Generation) dataset of FDA-approved prescribing informa
 
 ```bash
 # Re-download all prescribing info PDFs from DailyMed
-python scripts/download_prescribing_info.py   # drugs ranked 1-20
-python scripts/download_remaining.py           # drugs ranked 21-50
+python src/scripts/download_prescribing_info.py   # drugs ranked 1-20
+python src/scripts/download_remaining.py           # drugs ranked 21-50
 
 # Manage dependencies
 uv add <package>
@@ -30,7 +30,8 @@ uv sync
 
 - **`prescribing_info/`** — 50 FDA prescribing information PDFs (~78 MB), one per drug, named `{brand}_prescribing_info.pdf`
 - **`top_50_drugs.md`** — Reference table mapping rank, brand/generic names, manufacturers, sales figures, and indications
-- **`scripts/`** — Download scripts that use the [DailyMed REST API](https://dailymed.nlm.nih.gov/dailymed/app-support-web-services.cfm) (no API key needed). They look up each drug's set ID, then download the PDF. Falls back to XML if PDF is unavailable. 1-second delay between requests.
+- **`src/scripts/`** — Download scripts that use the [DailyMed REST API](https://dailymed.nlm.nih.gov/dailymed/app-support-web-services.cfm) (no API key needed). They look up each drug's set ID, then download the PDF. Falls back to XML if PDF is unavailable. 1-second delay between requests.
+- **`src/tests/`** — pytest test suite for the library modules in `src/`.
 
 ## Data Sources
 

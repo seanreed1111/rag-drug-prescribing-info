@@ -29,7 +29,7 @@ DRUGS = [
     ("verzenio", "abemaciclib"),
 ]
 
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "prescribing_info")
+OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "prescribing_info")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 BASE_API = "https://dailymed.nlm.nih.gov/dailymed/services/v2"

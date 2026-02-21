@@ -8,7 +8,7 @@ from src.pdf_section_parser import (
     _deduplicate_sections,
 )
 
-PRESCRIBING_INFO_DIR = Path(__file__).parent.parent / "prescribing_info"
+PRESCRIBING_INFO_DIR = Path(__file__).parent.parent.parent / "prescribing_info"
 
 
 def test_find_sections_basic():

@@ -8,7 +8,7 @@ from src.drug_metadata import (
     _classify_therapeutic_area,
 )
 
-TOP_50_DRUGS_PATH = Path(__file__).parent.parent / "top_50_drugs.md"
+TOP_50_DRUGS_PATH = Path(__file__).parent.parent.parent / "top_50_drugs.md"
 
 
 def test_get_known_drug():
