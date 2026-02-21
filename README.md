@@ -62,31 +62,62 @@ The PDFs are ingested into a local ChromaDB collection (`chroma_db/`) using sect
 
 ### PDFs Ingested into ChromaDB
 
-17 of 50 PDFs have been embedded and stored (remaining 33 are pending — see note below):
+48 of 50 PDFs have been embedded and stored:
 
 | Drug (Brand) | File | Sections | Chunks |
 |---|---|---|---|
 | Biktarvy | `biktarvy_prescribing_info.pdf` | 15 | 47 |
 | Comirnaty | `comirnaty_prescribing_info.pdf` | 13 | 66 |
+| Cosentyx | `cosentyx_prescribing_info.pdf` | 15 | 55 |
+| Darzalex | `darzalex_prescribing_info.pdf` | 15 | 60 |
+| Dupixent | `dupixent_prescribing_info.pdf` | 18 | 90 |
+| Eliquis | `eliquis_prescribing_info.pdf` | 16 | 40 |
+| Entresto | `entresto_prescribing_info.pdf` | 18 | 36 |
 | Entyvio | `entyvio_prescribing_info.pdf` | 16 | 42 |
 | Eylea | `eylea_prescribing_info.pdf` | 14 | 26 |
 | Farxiga | `farxiga_prescribing_info.pdf` | 15 | 53 |
+| Gardasil | `gardasil_prescribing_info.pdf` | 18 | 53 |
+| Hemlibra | `hemlibra_prescribing_info.pdf` | 15 | 38 |
+| Humira | `humira_prescribing_info.pdf` | 21 | 77 |
+| Ibrance | `ibrance_prescribing_info.pdf` | 18 | 36 |
+| Imbruvica | `imbruvica_prescribing_info.pdf` | 16 | 53 |
 | Imfinzi | `imfinzi_prescribing_info.pdf` | 18 | 71 |
 | Invega Sustenna | `invega_sustenna_prescribing_info.pdf` | 22 | 53 |
+| Jardiance | `jardiance_prescribing_info.pdf` | 16 | 51 |
+| Lynparza | `lynparza_prescribing_info.pdf` | 17 | 53 |
 | Mounjaro | `mounjaro_prescribing_info.pdf` | 18 | 64 |
 | Ocrevus | `ocrevus_prescribing_info.pdf` | 14 | 28 |
+| OFEV | `ofev_prescribing_info.pdf` | 15 | 35 |
+| Orencia | `orencia_prescribing_info.pdf` | 16 | 43 |
+| Ozempic | `ozempic_prescribing_info.pdf` | 20 | 53 |
 | Paxlovid | `paxlovid_prescribing_info.pdf` | 15 | 52 |
 | Perjeta | `perjeta_prescribing_info.pdf` | 13 | 34 |
+| Pomalyst | `pomalyst_prescribing_info.pdf` | 17 | 42 |
+| Prevnar | `prevnar_prescribing_info.pdf` | 14 | 52 |
+| Prolia | `prolia_prescribing_info.pdf` | 13 | 33 |
+| Revlimid | `revlimid_prescribing_info.pdf` | 16 | 75 |
+| Rinvoq | `rinvoq_prescribing_info.pdf` | 14 | 80 |
 | Rybelsus | `rybelsus_prescribing_info.pdf` | 21 | 41 |
 | Shingrix | `shingrix_prescribing_info.pdf` | 18 | 35 |
+| Skyrizi | `skyrizi_prescribing_info.pdf` | 14 | 71 |
+| Stelara | `stelara_prescribing_info.pdf` | 18 | 46 |
+| Tagrisso | `tagrisso_prescribing_info.pdf` | 17 | 46 |
+| Tecentriq | `tecentriq_prescribing_info.pdf` | 13 | 74 |
+| Tremfya | `tremfya_prescribing_info.pdf` | 14 | 57 |
 | Trikafta | `trikafta_prescribing_info.pdf` | 15 | 54 |
 | Trulicity | `trulicity_prescribing_info.pdf` | 16 | 57 |
+| Vabysmo | `vabysmo_prescribing_info.pdf` | 13 | 18 |
+| Verzenio | `verzenio_prescribing_info.pdf` | 15 | 39 |
+| Vyndaqel | `vyndaqel_prescribing_info.pdf` | 2 | 13 |
+| Wegovy | `wegovy_prescribing_info.pdf` | 15 | 61 |
+| Xarelto | `xarelto_prescribing_info.pdf` | 16 | 52 |
 | Xolair | `xolair_prescribing_info.pdf` | 17 | 58 |
 | Xtandi | `xtandi_prescribing_info.pdf` | 20 | 41 |
+| Zepbound | `zepbound_prescribing_info.pdf` | 16 | 70 |
 
-**Total: 822 chunks across 17 drugs**
+**Total: 2,424 chunks across 48 drugs**
 
-> **Note:** The remaining 33 PDFs failed due to Cohere trial API rate limits (100K tokens/min). To ingest all 50, upgrade your Cohere account and re-run `uv run python packages/parser-v1/src/parser_v1/scripts/ingest_pdfs.py`.
+> **Note:** 2 PDFs (Keytruda, Opdivo) failed to ingest — they exceeded the Cohere trial API rate limit (100K tokens/min) even after 6 retry attempts with exponential backoff. To ingest these, wait for the per-minute token window to reset and re-run `uv run python -m parser_v1.scripts.ingest_pdfs` (the script will skip the 48 already-ingested PDFs). To ingest all 50 reliably, upgrade your Cohere account.
 
 ## Date Collected
 

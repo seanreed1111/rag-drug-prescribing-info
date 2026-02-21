@@ -98,23 +98,26 @@ def main():
 
     # Setup ChromaDB
     chroma_client = chromadb.PersistentClient(path=str(CHROMA_DB_DIR))
-
-    # Delete existing collection if re-ingesting
-    try:
-        chroma_client.delete_collection(COLLECTION_NAME)
-        print(f"Deleted existing collection '{COLLECTION_NAME}'")
-    except Exception:
-        pass
-
     chroma_collection = chroma_client.get_or_create_collection(COLLECTION_NAME)
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+
+    # Find already-ingested PDFs by querying source_file metadata
+    existing_meta = chroma_collection.get(include=["metadatas"])
+    ingested_files: set[str] = set()
+    if existing_meta["metadatas"]:
+        ingested_files = {m.get("source_file", "") for m in existing_meta["metadatas"]}
+    ingested_files.discard("")
 
     # Build pipeline
     pipeline = build_pipeline(vector_store, api_key=cohere_key)
 
-    # Process each PDF
-    pdf_files = sorted(PRESCRIBING_INFO_DIR.glob("*.pdf"))
-    print(f"Found {len(pdf_files)} PDFs to process\n")
+    # Process each PDF — skip already-ingested ones
+    all_pdf_files = sorted(PRESCRIBING_INFO_DIR.glob("*.pdf"))
+    pdf_files = [f for f in all_pdf_files if f.name not in ingested_files]
+    skipped = len(all_pdf_files) - len(pdf_files)
+    print(
+        f"Found {len(all_pdf_files)} PDFs total, {skipped} already ingested, {len(pdf_files)} to process\n"
+    )
 
     xml_files = sorted(PRESCRIBING_INFO_DIR.glob("*.xml"))
     if xml_files:
@@ -155,10 +158,11 @@ def main():
     print(f"\n{'=' * 60}")
     print("INGESTION COMPLETE")
     print(f"{'=' * 60}")
-    print(f"Total PDFs processed: {len(pdf_files) - len(failed)}/{len(pdf_files)}")
-    print(f"Total chunks stored:  {total_nodes}")
-    print(f"ChromaDB location:    {CHROMA_DB_DIR}")
-    print(f"Collection:           {COLLECTION_NAME}")
+    print(f"PDFs processed this run: {len(pdf_files) - len(failed)}/{len(pdf_files)}")
+    print(f"PDFs previously ingested: {skipped}")
+    print(f"Chunks added this run:  {total_nodes}")
+    print(f"ChromaDB location:      {CHROMA_DB_DIR}")
+    print(f"Collection:             {COLLECTION_NAME}")
 
     if failed:
         print(f"\nFailed ({len(failed)}):")
