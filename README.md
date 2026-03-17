@@ -60,6 +60,12 @@ PDFs are saved to `prescribing_info/`. The scripts include a 1-second delay betw
 
 The PDFs are ingested into a local ChromaDB collection (`chroma_db/`) using section-aware chunking and Cohere embed-v4 embeddings. See `packages/parser-v1/src/parser_v1/scripts/ingest_pdfs.py` to run ingestion and `packages/parser-v1/src/parser_v1/scripts/query.py` to query the store.
 
+### parser-v1
+
+`packages/parser-v1` is the ingestion and retrieval package. It parses each PDF into FDA label sections (e.g. `5 WARNINGS AND PRECAUTIONS`, `12.1 Mechanism of Action`), attaches structured drug metadata to every section, then chunks each section with a `SentenceSplitter` (1024-token chunks, 128-token overlap) and embeds with Cohere `embed-v4.0`. Chunks are stored in ChromaDB with metadata fields (`brand_name`, `generic_name`, `therapeutic_area`, `fda_section`, `fda_subsection`) that allow filtered retrieval at query time. The ingestion script is idempotent — it skips already-ingested PDFs and retries on Cohere rate-limit errors with exponential backoff.
+
+See [`packages/parser-v1/README.md`](packages/parser-v1/README.md) for full documentation including pipeline diagrams, chunking parameters, and metadata schema.
+
 ### PDFs Ingested into ChromaDB
 
 48 of 50 PDFs have been embedded and stored:
